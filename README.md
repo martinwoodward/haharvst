@@ -17,6 +17,8 @@ It talks to the panel locally — no cloud account required.
 > The auxiliary outputs (Aux 1/2/3) and the panel's WiFi setup are intentionally
 > not exposed by this integration.
 
+![The Harvst Greenhouse device page in Home Assistant, showing the controls, sensors and recent activity.](images/device-page.png)
+
 ## Entities
 
 | Entity | Type | Description |

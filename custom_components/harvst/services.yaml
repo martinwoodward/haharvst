@@ -1,0 +1,25 @@
+water_zone:
+  name: Water zone
+  description: Run the pump on a watering zone for a number of seconds.
+  fields:
+    zone:
+      name: Zone
+      description: The watering zone to run (1 or 2).
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          mode: box
+    seconds:
+      name: Seconds
+      description: How long to run the pump, in seconds.
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+          mode: box

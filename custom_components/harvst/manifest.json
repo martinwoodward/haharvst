@@ -1,0 +1,12 @@
+{
+  "domain": "harvst",
+  "name": "Harvst Greenhouse",
+  "codeowners": ["@martinwoodward"],
+  "config_flow": true,
+  "documentation": "https://github.com/martinwoodward/haharvst",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/martinwoodward/haharvst/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

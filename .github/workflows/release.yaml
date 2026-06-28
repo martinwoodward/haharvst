@@ -1,0 +1,67 @@
+name: Release
+
+# Publish a new release whenever CI succeeds on main. The release tag is taken
+# from the version in custom_components/harvst/manifest.json, so bumping that
+# version (once CI passes) is all that is needed to cut a new HACS release.
+# Tags can also be pushed manually to force a release.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    # Only run for a successful CI run, a tag push, or a manual dispatch.
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read integration version
+        id: version
+        run: |
+          version=$(python -c "import json; print(json.load(open('custom_components/harvst/manifest.json'))['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release already exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release asset
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          cd custom_components/harvst
+          zip -r ../../harvst.zip .
+
+      - name: Create release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            harvst.zip \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes \
+            --target "${{ github.sha }}"

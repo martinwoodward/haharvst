@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Harvst Greenhouse",
+        "description": "Enter the address of your Harvst control panel.",
+        "data": {
+          "host": "Host or IP address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the control panel. Check the address and that the panel is on your network."
+    },
+    "abort": {
+      "already_configured": "This Harvst control panel is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Harvst options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "temperature_average": {
+        "name": "Average temperature"
+      }
+    },
+    "binary_sensor": {
+      "pump_running": {
+        "name": "Pump running"
+      }
+    }
+  },
+  "services": {
+    "water_zone": {
+      "name": "Water zone",
+      "description": "Run the pump on a watering zone for a number of seconds.",
+      "fields": {
+        "zone": {
+          "name": "Zone",
+          "description": "The watering zone to run (1 or 2)."
+        },
+        "seconds": {
+          "name": "Seconds",
+          "description": "How long to run the pump, in seconds."
+        }
+      }
+    }
+  }
+}

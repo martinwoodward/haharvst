@@ -37,6 +37,11 @@ jobs:
         uses: hacs/action@main
         with:
           category: integration
+          # "brands" requires the integration to be registered in the
+          # home-assistant/brands repository, which only applies to the HACS
+          # default store. This integration is installed as a custom
+          # repository, so the brands check is not applicable.
+          ignore: brands
 
   test:
     name: Tests

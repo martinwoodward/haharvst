@@ -153,3 +153,27 @@ published automatically using the version in
 ## License
 
 [MIT](LICENSE) © Martin Woodward
+
+## Origin
+
+<details>
+<summary>The original prompt used to create this project</summary>
+
+> You are creating a HACS home assistant integration that connects to a harvst
+> control panel that manages my greenhouse irrigation system. Explore the website
+> at http://192.168.2.172/ to investigate where the API's are and reverse engineer
+> what they are. The location of the control panel (192.168.2.172) should be
+> configurable. Reverse engineer the temperature control as a sensor. Then explore
+> the two zone watering system but ignore (aux 1, aux 2, aux 3). Ignore the WiFi
+> Setup.
+>
+> I want to be able to track the temperature, see when the zones are watering, and
+> trigger the different zones for a number of seconds.
+>
+> Create a repo for this to live in and push it to my GitHub when you are done as a
+> new repo (martinwoodward/haharvst). Give instructions for how to install using
+> HACS in the readme. Create tests and a CI script to create a new deployment as
+> when the CI build passes.
+
+</details>
+

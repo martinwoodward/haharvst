@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from custom_components.harvst.coordinator import parse_reading
+from custom_components.harvst.coordinator import _parse_back_pressure, parse_reading
 
 from .conftest import IDLE_READING, PUMPING_READING
 
@@ -44,3 +44,17 @@ def test_missing_fields_are_safe():
     assert data.temperature is None
     assert data.current is None
     assert data.pump_running is False
+
+
+def test_parse_back_pressure_splits_two_numbers():
+    """A "56 / 4712" string splits into reading and reference."""
+    reading, reference = _parse_back_pressure("56 / 4712")
+    assert reading == 56
+    assert reference == 4712
+
+
+def test_parse_back_pressure_handles_missing():
+    """Empty or single-value back-pressure strings degrade gracefully."""
+    assert _parse_back_pressure(None) == (None, None)
+    assert _parse_back_pressure("") == (None, None)
+    assert _parse_back_pressure("42") == (42, None)

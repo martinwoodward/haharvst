@@ -108,3 +108,18 @@ async def test_get_device_id_missing_returns_none():
     """Missing device id returns None rather than raising."""
     session = _FakeSession(_FakeResponse(body="<html>no id here</html>"))
     assert await HarvstClient("host", session).async_get_device_id() is None
+
+
+async def test_get_settings_info():
+    """Pump diagnostics are scraped from the settings page."""
+    session = _FakeSession(_FakeResponse(body=SETTINGS_HTML))
+    info = await HarvstClient("host", session).async_get_settings_info()
+    assert info["pump_back_pressure"] == "56 / 4712"
+    assert info["pump_detection"] == "Pump OK"
+
+
+async def test_get_settings_info_missing_rows():
+    """Absent diagnostic rows are simply omitted from the result."""
+    session = _FakeSession(_FakeResponse(body="<html>no table</html>"))
+    info = await HarvstClient("host", session).async_get_settings_info()
+    assert info == {}

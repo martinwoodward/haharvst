@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
+import re
 import time
 from typing import Any
 
@@ -33,7 +34,21 @@ class HarvstData:
     temperature_average: float | None = None
     current: int | None = None
     pump_running: bool = False
+    pump_back_pressure: str | None = None
+    pump_back_pressure_value: int | None = None
+    pump_back_pressure_reference: int | None = None
+    pump_detection: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
+
+
+def _parse_back_pressure(value: str | None) -> tuple[int | None, int | None]:
+    """Split a "56 / 4712" back-pressure string into (reading, reference)."""
+    if not value:
+        return None, None
+    numbers = [int(n) for n in re.findall(r"-?\d+", value)]
+    reading = numbers[0] if len(numbers) >= 1 else None
+    reference = numbers[1] if len(numbers) >= 2 else None
+    return reading, reference
 
 
 def _clean_temperature(value: Any) -> float | None:
@@ -116,7 +131,35 @@ class HarvstCoordinator(DataUpdateCoordinator[HarvstData]):
             reading = await self.client.async_get_reading()
         except HarvstConnectionError as err:
             raise UpdateFailed(str(err)) from err
-        return parse_reading(reading)
+        data = parse_reading(reading)
+        await self._apply_settings_info(data)
+        return data
+
+    async def _apply_settings_info(self, data: HarvstData) -> None:
+        """Populate diagnostic fields scraped from /settings (best effort).
+
+        A failure to read /settings must not fail the whole update (the SSE
+        reading is the primary data), so we log and fall back to the previously
+        known values instead.
+        """
+        try:
+            info = await self.client.async_get_settings_info()
+        except HarvstConnectionError as err:
+            _LOGGER.debug("Could not read pump diagnostics from /settings: %s", err)
+            if self.data is not None:
+                data.pump_back_pressure = self.data.pump_back_pressure
+                data.pump_back_pressure_value = self.data.pump_back_pressure_value
+                data.pump_back_pressure_reference = (
+                    self.data.pump_back_pressure_reference
+                )
+                data.pump_detection = self.data.pump_detection
+            return
+
+        data.pump_back_pressure = info.get("pump_back_pressure")
+        data.pump_detection = info.get("pump_detection")
+        reading, reference = _parse_back_pressure(data.pump_back_pressure)
+        data.pump_back_pressure_value = reading
+        data.pump_back_pressure_reference = reference
 
     async def async_water_zone(self, zone: int, seconds: int) -> None:
         """Trigger watering and remember which zone is now active."""

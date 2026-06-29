@@ -63,6 +63,11 @@ SSE_IDLE = (
 SETTINGS_HTML = """
 <html><body>
 <div class="box"><div class="device-id">Device ID: <div>A84467B865E4</div></div></div>
+<table class="table-data"><tbody>
+<tr><td>Pump back pressure</td><td>56 / 4712</td></tr>
+<tr><td>Pump detection</td><td>Pump OK</td></tr>
+<tr><td>Battery volts</td><td>0.00 V</td></tr>
+</tbody></table>
 </body></html>
 """
 

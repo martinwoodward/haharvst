@@ -31,3 +31,7 @@ KEY_TEMPERATURE: Final = "te"
 KEY_TEMPERATURE_AVG: Final = "teAve"
 KEY_CURRENT: Final = "cc"
 KEY_PUMP_STATE: Final = "pump_state"
+
+# Keys for diagnostic values scraped from the /settings page.
+KEY_PUMP_BACK_PRESSURE: Final = "pump_back_pressure"
+KEY_PUMP_DETECTION: Final = "pump_detection"

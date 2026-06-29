@@ -33,6 +33,12 @@
       },
       "temperature_average": {
         "name": "Average temperature"
+      },
+      "pump_back_pressure": {
+        "name": "Pump back pressure"
+      },
+      "pump_detection": {
+        "name": "Pump detection"
       }
     },
     "binary_sensor": {

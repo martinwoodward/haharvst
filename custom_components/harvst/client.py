@@ -19,8 +19,10 @@ The control panel is an ESP-based device that exposes:
   watering on ``zone`` (1 or 2) for ``seconds`` seconds. Responds with a
   ``302`` redirect to ``/?updated=y``.
 
-* ``GET /settings`` - an HTML page that contains the device id, used to build
-  a stable unique id for the config entry.
+* ``GET /settings`` - an HTML page that contains the device id (used to build
+  a stable unique id for the config entry) as well as a "System information"
+  table with diagnostic rows such as ``Pump back pressure`` (e.g. ``56 / 4712``)
+  and ``Pump detection`` (e.g. ``Pump OK``).
 """
 
 from __future__ import annotations
@@ -28,13 +30,33 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, Final
 
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_ID_RE = re.compile(r"Device ID:\s*<div>\s*([0-9A-Fa-f]+)\s*</div>")
+
+# Labels in the /settings "System information" table that we surface as sensors.
+SETTING_PUMP_BACK_PRESSURE: Final = "Pump back pressure"
+SETTING_PUMP_DETECTION: Final = "Pump detection"
+_TAG_RE = re.compile(r"<[^>]+>")
+_WS_RE = re.compile(r"\s+")
+
+
+def _extract_setting(text: str, label: str) -> str | None:
+    """Return the value cell for ``label`` in a settings ``<td>`` row pair."""
+    match = re.search(
+        rf"<td>\s*{re.escape(label)}\s*</td>\s*<td>(.*?)</td>",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if match is None:
+        return None
+    value = _WS_RE.sub(" ", _TAG_RE.sub(" ", match.group(1))).strip()
+    return value or None
+
 
 DEFAULT_TIMEOUT = 10
 # How long we are prepared to wait on the SSE stream for a single reading.
@@ -132,17 +154,38 @@ class HarvstClient:
 
     async def async_get_device_id(self) -> str | None:
         """Return the panel's device id, or ``None`` if it can't be read."""
+        text = await self._async_get_settings_html()
+        match = DEVICE_ID_RE.search(text)
+        return match.group(1).upper() if match else None
+
+    async def async_get_settings_info(self) -> dict[str, str]:
+        """Return diagnostic values scraped from the /settings page.
+
+        Currently extracts the ``Pump back pressure`` and ``Pump detection``
+        rows from the "System information" table. Missing rows are simply
+        omitted from the returned mapping.
+        """
+        text = await self._async_get_settings_html()
+        info: dict[str, str] = {}
+        for key, label in (
+            ("pump_back_pressure", SETTING_PUMP_BACK_PRESSURE),
+            ("pump_detection", SETTING_PUMP_DETECTION),
+        ):
+            value = _extract_setting(text, label)
+            if value is not None:
+                info[key] = value
+        return info
+
+    async def _async_get_settings_html(self) -> str:
+        """Fetch and return the raw HTML of the /settings page."""
         try:
             async with self._session.get(
                 self._url("/settings"),
                 timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT),
             ) as resp:
                 resp.raise_for_status()
-                text = await resp.text()
+                return await resp.text()
         except (TimeoutError, aiohttp.ClientError) as err:
             raise HarvstConnectionError(
                 f"Error reading settings from {self._host}: {err}"
             ) from err
-
-        match = DEVICE_ID_RE.search(text)
-        return match.group(1).upper() if match else None

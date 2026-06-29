@@ -51,6 +51,19 @@ async def test_entities_created(hass: HomeAssistant, setup_integration):
     )
 
 
+async def test_pump_diagnostics_from_settings(hass: HomeAssistant, setup_integration):
+    """Pump back pressure and detection sensors are scraped from /settings."""
+    back_pressure = hass.states.get("sensor.harvst_greenhouse_pump_back_pressure")
+    assert back_pressure is not None
+    assert back_pressure.state == "56"
+    assert back_pressure.attributes["raw"] == "56 / 4712"
+    assert back_pressure.attributes["reference"] == 4712
+
+    detection = hass.states.get("sensor.harvst_greenhouse_pump_detection")
+    assert detection is not None
+    assert detection.state == "Pump OK"
+
+
 async def test_water_zone_service(
     hass: HomeAssistant, aioclient_mock, setup_integration
 ):
@@ -112,6 +125,7 @@ async def test_zone_watering_sensor_tracks_command(
         f"http://{host}/events",
         text=f"id: 9\nevent: new_readings\ndata: {PUMPING_READING}\n\n",
     )
+    aioclient_mock.get(f"http://{host}/settings", text=SETTINGS_HTML)
     aioclient_mock.get(f"http://{host}/control", status=302)
 
     await hass.services.async_call(

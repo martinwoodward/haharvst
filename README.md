@@ -25,6 +25,8 @@ It talks to the panel locally — no cloud account required.
 | ------ | ---- | ----------- |
 | `sensor.harvst_greenhouse_temperature` | Sensor | Wired temperature probe (°C). |
 | `sensor.harvst_greenhouse_average_temperature` | Sensor | Rolling average temperature (disabled by default). |
+| `sensor.harvst_greenhouse_pump_back_pressure` | Sensor | Pump back-pressure reading (diagnostic). The raw `"56 / 4712"` value and the calibration `reference` are available as attributes. |
+| `sensor.harvst_greenhouse_pump_detection` | Sensor | Pump detection status, e.g. `Pump OK` (diagnostic). |
 | `binary_sensor.harvst_greenhouse_pump_running` | Binary sensor | `on` while the pump is running (any zone). |
 | `binary_sensor.harvst_greenhouse_zone_1_watering` | Binary sensor | `on` while zone 1 is watering. |
 | `binary_sensor.harvst_greenhouse_zone_2_watering` | Binary sensor | `on` while zone 2 is watering. |
@@ -124,8 +126,10 @@ integration uses the same endpoints the UI does:
 - **`GET /control?device=pump&state=on&zone=<n>&time=<seconds>`** — runs the
   pump on zone `n` (1 or 2) for `seconds` seconds.
 
-- **`GET /settings`** — used once to read the panel's device id for a stable
-  unique id.
+- **`GET /settings`** — an HTML page used to read the panel's device id (for a
+  stable unique id) and to scrape the "System information" table for the
+  **Pump back pressure** (e.g. `56 / 4712`) and **Pump detection** (e.g.
+  `Pump OK`) diagnostic sensors, which are polled on the same interval.
 
 ### Limitations
 

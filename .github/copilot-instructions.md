@@ -38,7 +38,16 @@ engineering the following endpoints — treat these as the source of truth:
   `allow_redirects=False` and accepts `200` or `302`).
 - `GET /control?do=clear<zone>` — clears the "last watered" state for a zone.
 - `GET /settings` — HTML page containing `Device ID: <div>A84467B865E4</div>`,
-  used to derive a stable unique id.
+  used to derive a stable unique id. Its "System information" table also holds
+  diagnostic rows scraped by the coordinator on every poll:
+  - `Pump back pressure` → e.g. `56 / 4712` (surfaced as the
+    `pump_back_pressure` sensor: state = first number, `raw`/`reference`
+    attributes for the full string and second number).
+  - `Pump detection` → e.g. `Pump OK` (surfaced as the `pump_detection` sensor).
+  The exact meaning of the two back-pressure numbers is not documented; we
+  expose them faithfully rather than guessing. The settings scrape is
+  best-effort — a failure logs at debug and keeps the previous values rather
+  than failing the whole update (the SSE reading is the primary data).
 
 **Watering detection:** prefer `pump_state` when present, otherwise treat
 `cc < 0` as "pump running".

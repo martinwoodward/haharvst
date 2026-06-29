@@ -44,6 +44,9 @@
     "binary_sensor": {
       "pump_running": {
         "name": "Pump running"
+      },
+      "low_water": {
+        "name": "Low water"
       }
     }
   },

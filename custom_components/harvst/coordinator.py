@@ -38,7 +38,21 @@ class HarvstData:
     pump_back_pressure_value: int | None = None
     pump_back_pressure_reference: int | None = None
     pump_detection: str | None = None
+    low_water: bool | None = None
     raw: dict[str, Any] = field(default_factory=dict)
+
+
+def _is_low_water(pump_detection: str | None) -> bool | None:
+    """Derive a low-water flag from the panel's pump detection status.
+
+    Low water is detected by the pump via back pressure (current drain): when
+    the pump starts pushing air the panel reports a non-OK status. The exact
+    wording isn't documented, so any status that doesn't read as "OK" is treated
+    as a low-water alert. ``None`` (status unknown) yields ``None``.
+    """
+    if pump_detection is None:
+        return None
+    return "ok" not in pump_detection.casefold()
 
 
 def _parse_back_pressure(value: str | None) -> tuple[int | None, int | None]:
@@ -153,10 +167,12 @@ class HarvstCoordinator(DataUpdateCoordinator[HarvstData]):
                     self.data.pump_back_pressure_reference
                 )
                 data.pump_detection = self.data.pump_detection
+                data.low_water = self.data.low_water
             return
 
         data.pump_back_pressure = info.get("pump_back_pressure")
         data.pump_detection = info.get("pump_detection")
+        data.low_water = _is_low_water(data.pump_detection)
         reading, reference = _parse_back_pressure(data.pump_back_pressure)
         data.pump_back_pressure_value = reading
         data.pump_back_pressure_reference = reference

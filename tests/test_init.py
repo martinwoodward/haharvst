@@ -63,6 +63,11 @@ async def test_pump_diagnostics_from_settings(hass: HomeAssistant, setup_integra
     assert detection is not None
     assert detection.state == "Pump OK"
 
+    low_water = hass.states.get("binary_sensor.harvst_greenhouse_low_water")
+    assert low_water is not None
+    assert low_water.state == STATE_OFF
+    assert low_water.attributes["status"] == "Pump OK"
+
 
 async def test_water_zone_service(
     hass: HomeAssistant, aioclient_mock, setup_integration

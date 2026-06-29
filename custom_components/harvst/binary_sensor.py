@@ -22,7 +22,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Harvst binary sensors."""
     coordinator: HarvstCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[BinarySensorEntity] = [HarvstPumpRunningSensor(coordinator)]
+    entities: list[BinarySensorEntity] = [
+        HarvstPumpRunningSensor(coordinator),
+        HarvstLowWaterSensor(coordinator),
+    ]
     entities.extend(HarvstZoneWateringSensor(coordinator, zone) for zone in ZONES)
     async_add_entities(entities)
 
@@ -47,6 +50,34 @@ class HarvstPumpRunningSensor(HarvstEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> dict[str, int | None]:
         """Expose the raw pump current for diagnostics."""
         return {"current_ma": self.coordinator.data.current}
+
+
+class HarvstLowWaterSensor(HarvstEntity, BinarySensorEntity):
+    """Low-water alert derived from the panel's pump detection status.
+
+    Harvst detects low water by the pump's back pressure (current drain): when
+    the tank empties the pump starts pushing air and the panel reports a non-OK
+    detection status. ``on`` means a low-water condition is detected.
+    """
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "low_water"
+
+    def __init__(self, coordinator: HarvstCoordinator) -> None:
+        """Initialise the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self._identifier}_low_water"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if low water is detected, or None if unknown."""
+        return self.coordinator.data.low_water
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Expose the raw pump detection status string."""
+        status = self.coordinator.data.pump_detection
+        return {"status": status} if status is not None else None
 
 
 class HarvstZoneWateringSensor(HarvstEntity, BinarySensorEntity):

@@ -28,6 +28,7 @@ It talks to the panel locally — no cloud account required.
 | `sensor.harvst_greenhouse_pump_back_pressure` | Sensor | Pump back-pressure reading (diagnostic). The raw `"56 / 4712"` value and the calibration `reference` are available as attributes. |
 | `sensor.harvst_greenhouse_pump_detection` | Sensor | Pump detection status, e.g. `Pump OK` (diagnostic). |
 | `binary_sensor.harvst_greenhouse_pump_running` | Binary sensor | `on` while the pump is running (any zone). |
+| `binary_sensor.harvst_greenhouse_low_water` | Binary sensor | `on` when the panel detects **low water** (the pump is pushing air). Derived from the pump detection status; the raw status is in the `status` attribute. |
 | `binary_sensor.harvst_greenhouse_zone_1_watering` | Binary sensor | `on` while zone 1 is watering. |
 | `binary_sensor.harvst_greenhouse_zone_2_watering` | Binary sensor | `on` while zone 2 is watering. |
 | `number.harvst_greenhouse_zone_1_watering_duration` | Number | Duration (seconds) used by the zone 1 button. |
@@ -130,6 +131,16 @@ integration uses the same endpoints the UI does:
   stable unique id) and to scrape the "System information" table for the
   **Pump back pressure** (e.g. `56 / 4712`) and **Pump detection** (e.g.
   `Pump OK`) diagnostic sensors, which are polled on the same interval.
+
+### Low water detection
+
+The WaterMate detects an empty tank from the pump's **back pressure** (the
+current it draws): when the tank runs dry the pump starts pushing air and the
+current drops. The two **Pump back pressure** numbers (`56 / 4712`) are
+calibration references for pumping air vs. water, set on the panel via *Reset
+backpressure*. The `binary_sensor.harvst_greenhouse_low_water` entity turns
+`on` whenever **Pump detection** reports anything other than `Pump OK`. See the
+[Harvst low-water alerts documentation](https://support.harvst.co.uk/hc/en-gb/articles/16719511862290-WaterMate-Low-water-alerts).
 
 ### Limitations
 

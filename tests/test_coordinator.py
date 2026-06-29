@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import json
 
-from custom_components.harvst.coordinator import _parse_back_pressure, parse_reading
+from custom_components.harvst.coordinator import (
+    _is_low_water,
+    _parse_back_pressure,
+    parse_reading,
+)
 
 from .conftest import IDLE_READING, PUMPING_READING
 
@@ -58,3 +62,14 @@ def test_parse_back_pressure_handles_missing():
     assert _parse_back_pressure(None) == (None, None)
     assert _parse_back_pressure("") == (None, None)
     assert _parse_back_pressure("42") == (42, None)
+
+
+def test_low_water_from_pump_detection():
+    """Any non-OK pump detection status flags low water."""
+    assert _is_low_water("Pump OK") is False
+    assert _is_low_water("OK") is False
+    assert _is_low_water("Low water") is True
+    assert _is_low_water("No water detected") is True
+    assert _is_low_water("Pump dry") is True
+    # Unknown status (settings not yet read) stays unknown.
+    assert _is_low_water(None) is None

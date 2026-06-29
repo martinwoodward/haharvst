@@ -44,10 +44,16 @@ engineering the following endpoints — treat these as the source of truth:
     `pump_back_pressure` sensor: state = first number, `raw`/`reference`
     attributes for the full string and second number).
   - `Pump detection` → e.g. `Pump OK` (surfaced as the `pump_detection` sensor).
-  The exact meaning of the two back-pressure numbers is not documented; we
-  expose them faithfully rather than guessing. The settings scrape is
-  best-effort — a failure logs at debug and keeps the previous values rather
-  than failing the whole update (the SSE reading is the primary data).
+  - **Low water** → `binary_sensor.harvst_greenhouse_low_water` (device_class
+    PROBLEM) is derived from `Pump detection`: `_is_low_water()` returns `None`
+    for an unknown status, else `True` when the status is anything other than
+    `*ok*` (case-insensitive). Per the user, treat any non-OK status as low
+    water. Docs: https://support.harvst.co.uk/hc/en-gb/articles/16719511862290-WaterMate-Low-water-alerts
+  The two back-pressure numbers are pump-air-vs-water calibration references
+  (recalibrated on the panel via "Reset backpressure"); we expose them
+  faithfully. The settings scrape is best-effort — a failure logs at debug and
+  keeps the previous values rather than failing the whole update (the SSE
+  reading is the primary data).
 
 **Watering detection:** prefer `pump_state` when present, otherwise treat
 `cc < 0` as "pump running".
